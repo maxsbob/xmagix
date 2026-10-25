@@ -9,14 +9,14 @@ simulation and offline imitation, with more bodies, tasks, physics variants and 
 
 | | x-magical | xmagix |
 |---|---|---|
-| simulator | PyMunk, CPU, one env per process | MuJoCo Warp, thousands of worlds per GPU |
+| simulator | PyMunk (CPU) | MuJoCo Warp, thousands of worlds per GPU |
 | interface | Gym | pure JAX functions (`jit`/`lax.scan`-able, via `warp.jax_callable`) + Gymnasium vector env |
 | embodiments | 4 (gripper, 3 sticks) | 11: point (normal / slow / heavy), 3 sticks, gripper, scoop, diff-drive cart, 2- and 3-link arms |
-| action spaces | body-frame velocity | world-frame force, body-frame force, non-holonomic thrust+turn, joint torques |
-| tasks | 6 manipulation | 8: reach, push, sweep, match regions, route (left/right gap), orbit (ccw/cw) |
+| action spaces | one per body (not documented) | world-frame force, body-frame force, non-holonomic thrust+turn, joint torques |
+| tasks | 1 released (SweepToTop) | 8: reach, push, sweep, match regions, route (left/right gap), orbit (ccw/cw) |
 | path-dependent tasks | – | route and orbit: same start and goal, different required path or direction |
 | physics variants | – | default, heavy blocks, slippery floor |
-| offline data | demonstrations | reward-free play datasets (OGBench format) + observation-only demonstrations |
+| offline data | – | reward-free play datasets (OGBench format) + observation-only demonstrations |
 | validity check | – | every task × body pair has a measured scripted-expert success rate |
 
 ## Install
@@ -73,7 +73,7 @@ dimension and meaning differ per body, so raw-state matching has no shortcut.
 | `reach` | visit 3 waypoints in order | alignment without objects |
 | `push` | block inside the goal disc | transport, goal precision |
 | `sweep` | all 3 blocks above the line (x-magical's SweepToTop) | multiple objects |
-| `match` | both green blocks in the region, no red ones (x-magical's MatchRegions) | object selection |
+| `match` | both green blocks in the region, no red ones (MatchRegions from MAGICAL, x-magical's predecessor) | object selection |
 | `route_left` / `route_right` | block at the goal **through the demonstrated gap** | the path, not just the goal |
 | `orbit_ccw` / `orbit_cw` | a full lap around the pillar in the demonstrated direction | direction: invisible to state-occupancy matching |
 

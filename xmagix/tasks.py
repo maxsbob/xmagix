@@ -116,7 +116,7 @@ class SweepToTop(Task):
 
 @dataclass(frozen=True)
 class MatchRegions(Task):
-    """x-magical's MatchRegions: all blocks of the target colour inside the region, none of the
+    """MatchRegions (from MAGICAL): all blocks of the target colour inside the region, none of the
     others. Blocks 0..k-1 are targets."""
 
     n_target: int = 2

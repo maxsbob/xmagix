@@ -813,6 +813,7 @@ source = { editable = "." }
 dependencies = [
     { name = "gymnasium" },
     { name = "jax" },
+    { name = "matplotlib" },
     { name = "mujoco" },
     { name = "numpy" },
 ]
@@ -826,7 +827,6 @@ gpu = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "matplotlib" },
     { name = "pytest" },
 ]
 
@@ -835,6 +835,7 @@ requires-dist = [
     { name = "gymnasium", specifier = ">=1.0" },
     { name = "jax", specifier = ">=0.12.0" },
     { name = "jax", extras = ["cuda12"], marker = "extra == 'gpu'", specifier = ">=0.12.0" },
+    { name = "matplotlib", specifier = ">=3.9" },
     { name = "mujoco", specifier = ">=3.16.0" },
     { name = "mujoco-warp", marker = "extra == 'gpu'", specifier = ">=3.16.0" },
     { name = "numpy", specifier = ">=2.0" },
@@ -843,10 +844,7 @@ requires-dist = [
 provides-extras = ["gpu"]
 
 [package.metadata.requires-dev]
-dev = [
-    { name = "matplotlib", specifier = ">=3.9" },
-    { name = "pytest", specifier = ">=8" },
-]
+dev = [{ name = "pytest", specifier = ">=8" }]
 
 [[package]]
 name = "zipp"

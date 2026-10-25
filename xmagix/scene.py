@@ -6,7 +6,7 @@ and walls; fixed-base arms collide with blocks only (they reach over walls).
 """
 
 from xmagix.embodiments import Z, Embodiment
-from xmagix.tasks import BLOCK, COLOURS, MatchRegions, PushToRegion, Route, Task
+from xmagix.tasks import BLOCK, COLOURS, MatchRegions, PushToRegion, Reach, Route, Task
 
 VARIANTS = {  # block physics
     "default": dict(mass=0.3, damping=2.0),
@@ -32,6 +32,9 @@ def build_xml(task: Task, emb: Embodiment, variant="default"):
     if isinstance(task, MatchRegions):
         cx, cy, hx, hy = task.region
         regions += f'\n    <geom type="box" pos="{cx} {cy} 0.001" size="{hx} {hy} 0.001" rgba="0.2 0.7 0.3 0.35" {REGION}/>'
+    if isinstance(task, Reach):
+        regions += "".join(f'\n    <geom type="cylinder" pos="{x} {y} 0.001" size="{task.radius} 0.001" rgba="0.2 0.7 0.3 0.35" {REGION}/>'
+                           for x, y in task.waypoints)
     if hasattr(task, "line"):
         regions += f'\n    <geom type="box" pos="0 {(task.line + 1) / 2} 0.001" size="1 {(1 - task.line) / 2} 0.001" rgba="0.2 0.7 0.3 0.25" {REGION}/>'
     body, actuators = emb.xml()

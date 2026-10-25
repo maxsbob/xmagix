@@ -41,6 +41,7 @@ class Embodiment:
     push_width: float = 0.035  # how far off-centre it can push a block and still move it straight
     body_radius: float = 0.06  # clearance its body needs when passing beside a block
     time_scale: float = 1.0  # episode horizons are multiplied by this (slow bodies get more time)
+    eyes: tuple = ("agent", (0.0, 0.0), 0.026, 0.022)  # drawing only: body, local centre, half spacing, radius
 
     @property
     def contact(self):
@@ -363,12 +364,17 @@ EMBODIMENTS = {
     "point": Point("point", nq=2, act_dim=2, push_offset=0.06, oriented=False),
     "point_slow": Point("point_slow", nq=2, act_dim=2, push_offset=0.06, oriented=False, gear=0.8, time_scale=2.5),
     "point_heavy": Point("point_heavy", nq=2, act_dim=2, push_offset=0.06, oriented=False, mass=4.0, time_scale=1.5),
-    "stick_short": Stick("stick_short", nq=3, act_dim=3, push_offset=0.025, half_length=0.08, turn_first=True, push_width=0.05, body_radius=0.11),
-    "stick_medium": Stick("stick_medium", nq=3, act_dim=3, push_offset=0.025, half_length=0.15, turn_first=True, push_width=0.1, body_radius=0.18),
-    "stick_long": Stick("stick_long", nq=3, act_dim=3, push_offset=0.025, half_length=0.3, turn_first=True, push_width=0.2, body_radius=0.33),
-    "gripper": Gripper("gripper", nq=5, act_dim=4, push_offset=0.0, body_radius=0.12),
-    "scoop": Scoop("scoop", nq=3, act_dim=3, push_offset=0.0, push_width=0.05, body_radius=0.16, turn_first=True),
-    "diffdrive": DiffDrive("diffdrive", nq=3, act_dim=2, push_offset=0.0, push_width=0.05, body_radius=0.12),
-    "arm2": Arm("arm2", nq=2, act_dim=2, push_offset=0.045, oriented=False, links=(0.8, 0.8)),
-    "arm3": Arm("arm3", nq=3, act_dim=3, push_offset=0.045, oriented=False, links=(0.55, 0.55, 0.55)),
+    "stick_short": Stick("stick_short", nq=3, act_dim=3, push_offset=0.025, half_length=0.08, eyes=("agent", (0.0, 0.0), 0.027, 0.021), turn_first=True, push_width=0.05, body_radius=0.11),
+    "stick_medium": Stick("stick_medium", nq=3, act_dim=3, push_offset=0.025, half_length=0.15, eyes=("agent", (0.0, 0.0), 0.027, 0.021), turn_first=True, push_width=0.1, body_radius=0.18),
+    "stick_long": Stick("stick_long", nq=3, act_dim=3, push_offset=0.025, half_length=0.3, eyes=("agent", (0.0, 0.0), 0.027, 0.021), turn_first=True, push_width=0.2, body_radius=0.33),
+    "gripper": Gripper("gripper", nq=5, act_dim=4, push_offset=0.0, body_radius=0.12,
+                       eyes=("agent", (0.0, 0.0), 0.042, 0.022)),
+    "scoop": Scoop("scoop", nq=3, act_dim=3, push_offset=0.0, push_width=0.05, body_radius=0.16, turn_first=True,
+                   eyes=("agent", (-0.02, 0.0), 0.045, 0.021)),
+    "diffdrive": DiffDrive("diffdrive", nq=3, act_dim=2, push_offset=0.0, push_width=0.05, body_radius=0.12,
+                           eyes=("agent", (-0.015, 0.0), 0.028, 0.022)),
+    "arm2": Arm("arm2", nq=2, act_dim=2, push_offset=0.045, oriented=False, links=(0.8, 0.8),
+                eyes=("link1", (0.8, 0.0), 0.026, 0.022)),
+    "arm3": Arm("arm3", nq=3, act_dim=3, push_offset=0.045, oriented=False, links=(0.55, 0.55, 0.55),
+                eyes=("link2", (0.55, 0.0), 0.026, 0.022)),
 }

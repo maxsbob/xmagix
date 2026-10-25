@@ -13,12 +13,15 @@ from xmagix.env import make
 
 
 class XmagixVectorEnv(gymnasium.vector.VectorEnv):
-    def __init__(self, task, embodiment, num_envs, variant="default", backend="warp"):
-        self.env = make(task, embodiment, num_envs, variant=variant, backend=backend)
+    def __init__(self, task, embodiment, num_envs, variant="default", backend="warp", **kw):
+        self.env = make(task, embodiment, num_envs, variant=variant, backend=backend, **kw)
         self.num_envs = num_envs
         hi = np.ones(self.env.act_dim, np.float32)
         self.single_action_space = gymnasium.spaces.Box(-hi, hi, dtype=np.float32)
-        self.single_observation_space = gymnasium.spaces.Box(-np.inf, np.inf, (self.env.obs_dim,), np.float32)
+        if self.env.obs_type == "pixels":
+            self.single_observation_space = gymnasium.spaces.Box(0, 255, self.env.obs_shape, np.uint8)
+        else:
+            self.single_observation_space = gymnasium.spaces.Box(-np.inf, np.inf, self.env.obs_shape, np.float32)
         self.action_space = gymnasium.vector.utils.batch_space(self.single_action_space, num_envs)
         self.observation_space = gymnasium.vector.utils.batch_space(self.single_observation_space, num_envs)
         self.metadata = {"autoreset_mode": gymnasium.vector.AutoresetMode.SAME_STEP}

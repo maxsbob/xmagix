@@ -5,11 +5,18 @@
 tabletop world, many bodies, embodiment-independent task success), rebuilt for batched GPU
 simulation and offline imitation, with more bodies, tasks, physics variants and datasets.
 
+<p>
+<img src="docs/push-gripper.gif" width="19%"> <img src="docs/sweep-stick_medium.gif" width="19%">
+<img src="docs/route_left-point.gif" width="19%"> <img src="docs/orbit_ccw-arm2.gif" width="19%">
+<img src="docs/match-diffdrive.gif" width="19%">
+</p>
+
 ![every embodiment solving the push task](docs/embodiments.png)
 
 | | x-magical | xmagix |
 |---|---|---|
 | simulator | PyMunk (CPU) | MuJoCo Warp, thousands of worlds per GPU |
+| observations | pixels; state for some tasks | state features or 64×64 pixels, both batched on the GPU |
 | interface | Gym | pure JAX functions (`jit`/`lax.scan`-able, via `warp.jax_callable`) + Gymnasium vector env |
 | embodiments | 4 (gripper, 3 sticks) | 11: point (normal / slow / heavy), 3 sticks, gripper, scoop, diff-drive cart, 2- and 3-link arms |
 | action spaces | one per body (not documented) | world-frame force, body-frame force, non-holonomic thrust+turn, joint torques |
@@ -23,7 +30,7 @@ simulation and offline imitation, with more bodies, tasks, physics variants and 
 
 ```bash
 uv sync --extra gpu        # jax[cuda12], mujoco-warp, warp-lang
-uv run pytest -q           # 37 tests (GPU)
+uv run pytest -q           # 49 tests (GPU)
 ```
 
 ## Use
@@ -121,6 +128,24 @@ Each pair gets `data/<task>-<body>/play.npz` and `demos.npz`.
 Keys follow OGBench (`observations, actions, terminals, qpos, qvel`), so OGBench loaders read
 them. Generating 1M transitions takes 30–45 s per pair on one RTX 4090.
 
+## Rendering and pixel observations
+
+`xmagix.draw.render` draws states in pure JAX with anti-aliased signed-distance shapes. Shapes and
+poses come from the MuJoCo model through planar forward kinematics, and a test checks them
+against MuJoCo for every body, so the picture always matches the physics. The style follows
+x-magical: grey robots with eyes that look where they move, pastel goal zones, rounded blocks
+with outlines, soft shadows and a faint floor grid. The same function provides pixel
+observations:
+
+```python
+env = xmagix.make("sweep", "gripper", num_envs=4096, obs_type="pixels", pixel_size=64)
+obs = env.observe(state)                                   # (4096, 64, 64, 3) uint8
+img = xmagix.draw.render(env, state.q, state.v, size=512, supersample=2, trail=path)
+```
+
+It renders 78k–156k frames/s at 64×64 on one RTX 4090 shared with training jobs.
+`scripts/gallery.py` makes the figures and GIFs above.
+
 ## Speed
 
 Environment steps per second (1 step = 5 physics steps), scripted expert in the loop, one RTX 4090 **shared with other training jobs** (a lower bound). Measured by `benchmarks/speed.py`.
@@ -139,4 +164,3 @@ Environment steps per second (1 step = 5 physics steps), scripted expert in the 
 - **Reproducibility.** The same key gives the same trajectory up to floating-point atomics in
   MJWarp's contact solver: differences are ≤ 2·10⁻³ after 50 contact-rich steps, not
   bit-exact. CPU MuJoCo (`backend="cpu"`) is the reference; tests check that the two agree.
-- **Pixels** are planned through MJWarp's batched renderer; the API does not need to change.

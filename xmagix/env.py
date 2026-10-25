@@ -36,6 +36,8 @@ class Env:
     backend: str = "warp"
     frame_skip: int = 5
     auto_reset: bool = True
+    obs_type: str = "state"  # state | pixels (allocentric top-down image, uint8, see xmagix.draw)
+    pixel_size: int = 64
 
     def __post_init__(self):
         self.xml = build_xml(self.task, self.emb, self.variant)
@@ -44,7 +46,8 @@ class Env:
         self.mjm = self.sim.mjm
         self.n_blocks = len(self.task.blocks)
         self.act_dim = self.emb.act_dim
-        self.obs_dim = int(self._observe(self._zeros()).shape[-1])
+        self.obs_dim = int(self.state_obs(self._zeros()).shape[-1])  # state features
+        self.obs_shape = (self.pixel_size, self.pixel_size, 3) if self.obs_type == "pixels" else (self.obs_dim,)
         self.horizon = int(round(self.task.horizon * self.emb.time_scale))
 
     @property
@@ -65,6 +68,13 @@ class Env:
         return self.emb.effector(q)
 
     def _observe(self, s):
+        if self.obs_type == "pixels":
+            from xmagix.draw import render
+
+            return render(self, s.q, s.v, size=self.pixel_size)
+        return self.state_obs(s)
+
+    def state_obs(self, s):
         """Embodiment proprioception + every block in the embodiment's own frame (position,
         and orientation as cos/sin of 4x the relative yaw: a square looks the same every 90°)."""
         xy, yaw = self.emb.pose(s.q)
@@ -125,6 +135,7 @@ class Env:
 
 
 def make(task, embodiment, num_envs=1024, variant="default", backend="warp", **kw):
+    """`obs_type="pixels"` (with `pixel_size`) gives top-down images instead of state features."""
     return Env(TASKS[task], EMBODIMENTS[embodiment], num_envs, variant=variant, backend=backend, **kw)
 
 

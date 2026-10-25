@@ -104,3 +104,38 @@ def test_play_data_and_demos(tmp_path):
     assert data["observations"].shape == (3200, env.obs_dim) and data["terminals"].sum() >= 32
     obs, qs, truncated = demonstrations(xmagix.make("push", "point", 16), jax.random.PRNGKey(1), 3)
     assert len(obs) == 3 and not truncated and all(o.shape[1] == env.obs_dim for o in obs)
+
+
+@needs_gpu
+@pytest.mark.parametrize("emb", list(xmagix.EMBODIMENTS))
+def test_render_matches_physics(emb):
+    """The drawing uses planar kinematics from the model: body poses must equal MuJoCo's."""
+    import mujoco
+
+    from xmagix.draw import body_poses
+
+    env = xmagix.make("push", emb, 2, auto_reset=False)
+    s = env.reset(jax.random.PRNGKey(0))
+    for _ in range(5):
+        s, _, _ = env.step(s, env.expert(s))
+    poses = body_poses(env.mjm, s.q)
+    d = mujoco.MjData(env.mjm)
+    d.qpos[:] = np.asarray(s.q[1], np.float64)
+    mujoco.mj_kinematics(env.mjm, d)
+    for b in range(1, env.mjm.nbody):
+        x, y, a = (float(t[1]) for t in poses[b])
+        np.testing.assert_allclose([x, y], d.xpos[b][:2], atol=1e-4)
+        R = d.xmat[b].reshape(3, 3)
+        assert abs(np.angle(np.exp(1j * (a - np.arctan2(R[1, 0], R[0, 0]))))) < 1e-4
+
+
+@needs_gpu
+def test_pixel_observations():
+    env = xmagix.make("sweep", "gripper", 8, obs_type="pixels", pixel_size=64)
+    s = env.reset(jax.random.PRNGKey(0))
+    obs = env.observe(s)
+    assert obs.shape == (8, 64, 64, 3) and obs.dtype == jnp.uint8
+    s2, obs2, _ = env.step(s, env.expert(s), jax.random.PRNGKey(1))
+    assert obs2.shape == (8, 64, 64, 3)
+    img = np.asarray(obs[0]).astype(int)
+    assert img.std() > 5 and (img[..., 0] - img[..., 1]).max() > 40  # pink blocks / zone present
